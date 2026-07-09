@@ -42,7 +42,7 @@ jobs:
         export CROSS_COMPILE=aarch64-linux-gnu-
 
         # 4. Initialize config
-        make ARCH=arm64 CC=clang HOSTCC=clang LLVM=1 universal9830_defconfig
+        make ARCH=arm64 CC=clang HOSTCC=clang LLVM=1 exynos9830_defconfig
         
         # 5. Handle any hidden or newly added configurations automatically
         make ARCH=arm64 CC=clang HOSTCC=clang LLVM=1 olddefconfig
