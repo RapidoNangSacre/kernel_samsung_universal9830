@@ -50,8 +50,8 @@ jobs:
         # 6. Cook the kernel
         make -j$(nproc) ARCH=arm64 CC=clang HOSTCC=clang LLVM=1
 
-         - name: Package with AnyKernel3
-           run |
+    - name: Package with AnyKernel3
+      run: |
         # 1. Clone AnyKernel3 template (shallow clone for speed)
         git clone --depth=1 https://github.com/osm0sis/AnyKernel3.git ${{ github.workspace }}/AnyKernel3
         
@@ -75,4 +75,3 @@ jobs:
       with:
         name: Samsung-Universal9830-Flashable-Zip
         path: patched-kernel-flashable.zip
-        
