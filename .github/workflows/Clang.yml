@@ -19,9 +19,7 @@ jobs:
     - name: Download Clang (toolchain for build)
       uses: nullptr-t-oss/kernel_toolchains/clang_setup@main    
       with:
-        clang-version: '${{ env.CLANG }}'
-        install-dir: '${{ env.KERNEL_PLATFORM }}/prebuilts/clang/host/linux-x86'
-
+        clang-version: 'aosp-clang-r547379'
    
     - name: Run Build Commands
       run: |
