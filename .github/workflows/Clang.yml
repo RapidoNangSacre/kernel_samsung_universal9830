@@ -38,16 +38,18 @@ jobs:
         export ARCH=arm64
         export SUBARCH=arm64
         export CC=clang
+        export HOSTCC=clang
+        export LTO=thin
+        export LLVM=1
+        export LLVM_IAS=1
         export CLANG_TRIPLE=aarch64-linux-gnu-
-        export CROSS_COMPILE=aarch64-linux-android-
-        CC=clang HOSTCC=clang ARCH=arm64 LTO=thin
-        CROSS_COMPILE=aarch64-linux-gnu-
+        export CROSS_COMPILE=aarch64-linux-gnu-
 
         # 4. Initialize config
-        make universal9830_defconfig
+        make ARCH=arm64 CC=clang HOSTCC=clang LLVM=1 universal9830_defconfig
         
         # 5. Handle any hidden or newly added configurations automatically
-        make olddefconfig
+        make ARCH=arm64 CC=clang HOSTCC=clang LLVM=1 olddefconfig
         
         # 6. Cook the kernel
-        make -j$(nproc)
+        make -j$(nproc) ARCH=arm64 CC=clang HOSTCC=clang LLVM=1
