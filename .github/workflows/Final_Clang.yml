@@ -64,12 +64,14 @@ jobs:
 
         cd ${{ github.workspace }}/AnyKernel3
         
-        # 3. Inject Samsung Galaxy S20+ Strict Structural Flags
-        # Disables generic checking and points directly to the physical boot block device
+                # 3. Inject Samsung Galaxy S20+ Strict Structural Flags
         sed -i 's/do.devicecheck=1/do.devicecheck=0/g' anykernel.sh
         sed -i 's|block=/dev/block/by-name/boot;|block=/dev/block/by-name/boot;|g' anykernel.sh
         sed -i 's/is_slot_device=0;/is_slot_device=0;/g' anykernel.sh
-        sed -i 's/ramdisk_compression=auto;/ramdisk_compression=auto;/g' anykernel.sh
+        
+        # Force AnyKernel to keep the ROM's existing ramdisk entirely intact
+        sed -i 's/ramdisk_compression=auto;/ramdisk_compression=skip;/g' anykernel.sh
+
         
         # 4. Zip up the modified template layout
         zip -r9 ../patched-kernel-flashable.zip *
