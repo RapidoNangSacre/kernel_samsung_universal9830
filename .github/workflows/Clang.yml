@@ -74,8 +74,8 @@ jobs:
         # 4. Zip up the modified template layout
         zip -r9 ../patched-kernel-flashable.zip *
 
-        - name: Upload Flashable Kernel Zip
-         uses: actions/upload-artifact@v4
-         with:
-        name: Samsung-Universal9830-Flashable-Zip
-        path: patched-kernel-flashable.zip
+    - name: Upload Flashable Kernel Zip
+      uses: actions/upload-artifact@v4
+      with:
+       name: Samsung-Universal9830-Flashable-Zip
+       path: patched-kernel-flashable.zip
