@@ -1,0 +1,51 @@
+name: Android Kernel Build
+
+on:
+  workflow_dispatch: # Allows you to trigger the build manually
+
+jobs:
+  build-kernel:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Kernel Source
+      uses: actions/checkout@v4
+
+    - name: Install Build Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y bc build-essential libssl-dev libelf-dev bison flex hidden-posix-threads-dev libgmp-dev libmpfr-dev libmpc-dev libncurses5-dev
+
+    - name: Download AOSP Clang Toolchain
+      run: |
+        mkdir -p ${{ github.workspace }}/toolchain
+        # Downloading a stable AOSP Clang (r16 / Clang 12 or adjust to your kernel's needed version)
+        wget https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/main/clang-r416183b.tar.gz -O clang.tar.gz
+        tar -xC ${{ github.workspace }}/toolchain -f clang.tar.gz
+        rm clang.tar.gz
+
+   
+    - name: Run Build Commands
+      run: |
+        # 1. Setup absolute paths to the toolchains
+        CLANG_BIN="${{ github.workspace }}/toolchain/bin"
+        GCC_BIN="${{ github.workspace }}/gcc64/bin"
+        
+        # 2. Add paths to the environment so make can see them
+        export PATH="$CLANG_BIN:$GCC_BIN:$PATH"
+        
+        # 3. Define the build variables strictly
+        export ARCH=arm64
+        export SUBARCH=arm64
+        export CC=clang
+        export CLANG_TRIPLE=aarch64-linux-gnu-
+        export CROSS_COMPILE=aarch64-linux-android-
+
+        # 4. Initialize config
+        make universal9830_defconfig
+        
+        # 5. Handle any hidden or newly added configurations automatically
+        make olddefconfig
+        
+        # 6. Cook the kernel
+        make -j$(nproc)
