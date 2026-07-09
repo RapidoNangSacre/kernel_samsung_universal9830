@@ -1,0 +1,82 @@
+Name: Android Kernel Build
+
+on:
+  workflow_dispatch: # Allows you to trigger the build manually
+
+jobs:
+  build-kernel:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Kernel Source
+      uses: actions/checkout@v4
+
+    - name: Install Build Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y bc build-essential libssl-dev libelf-dev bison flex libgmp-dev libmpfr-dev libmpc-dev libncurses5-dev crossbuild-essential-arm64
+
+    - name: Download Clang (toolchain for build)
+      uses: nullptr-t-oss/kernel_toolchains/clang_setup@main    
+      with:
+        clang-version: 'aosp-clang-r547379'
+   
+    - name: Run Build Commands
+      run: |
+        # 1. Setup absolute paths to the toolchains
+        CLANG_BIN="${{ github.workspace }}/toolchain/bin"
+        GCC_BIN="${{ github.workspace }}/gcc64/bin"
+        
+        # 2. Add paths to the environment so make can see them
+        export PATH="$CLANG_BIN:$GCC_BIN:$PATH"
+        
+        # 3. Define the build variables strictly
+        export ARCH=arm64
+        export SUBARCH=arm64
+        export CC=clang
+        export HOSTCC=clang
+        export LTO=thin
+        export LLVM=1
+        export LLVM_IAS=1
+        export CLANG_TRIPLE=aarch64-linux-gnu-
+        export CROSS_COMPILE=aarch64-linux-gnu-
+
+        # 4. Initialize config
+        make ARCH=arm64 CC=clang HOSTCC=clang LLVM=1 exynos9830_defconfig
+        
+        # 5. Handle any hidden or newly added configurations automatically
+        make ARCH=arm64 CC=clang HOSTCC=clang LLVM=1 olddefconfig
+        
+        # 6. Cook the kernel
+        make -j$(nproc) ARCH=arm64 CC=clang HOSTCC=clang LLVM=1
+
+    - name: Package with AnyKernel3
+      run: |
+        # 1. Clone AnyKernel3 template (shallow clone)
+        git clone --depth=1 https://github.com/osm0sis/AnyKernel3.git ${{ github.workspace }}/AnyKernel3
+        
+        # 2. Copy your compiled raw kernel Image into the setup folder
+        cp arch/arm64/boot/Image ${{ github.workspace }}/AnyKernel3/
+        
+        if [ -f arch/arm64/boot/dtbo.img ]; then
+            cp arch/arm64/boot/dtbo.img ${{ github.workspace }}/AnyKernel3/
+        fi
+
+        cd ${{ github.workspace }}/AnyKernel3
+        
+        # 3. Inject Samsung Galaxy S20+ Strict Structural Flags
+        # Disables generic checking and points directly to the physical boot block device
+        sed -i 's/do.devicecheck=1/do.devicecheck=0/g' anykernel.sh
+        sed -i 's|block=/dev/block/by-name/boot;|block=/dev/block/by-name/boot;|g' anykernel.sh
+        sed -i 's/is_slot_device=0;/is_slot_device=0;/g' anykernel.sh
+        sed -i 's/ramdisk_compression=auto;/ramdisk_compression=auto;/g' anykernel.sh
+        
+        # 4. Zip up the modified template layout
+        zip -r9 ../patched-kernel-flashable.zip *
+
+    - name: Upload Flashable Kernel Zip
+      uses: actions/upload-artifact@v4
+      with:
+        name: Samsung-Universal9830-Flashable-Zip
+        path: patched-kernel-flashable.zip
+        
