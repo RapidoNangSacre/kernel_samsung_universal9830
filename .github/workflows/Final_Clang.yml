@@ -1,4 +1,4 @@
-Name: Android Kernel Build
+name: Android Kernel Build
 
 on:
   workflow_dispatch: # Allows you to trigger the build manually
